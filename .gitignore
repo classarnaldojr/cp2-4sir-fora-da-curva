@@ -3,3 +3,11 @@ venv/
 ENV/
 env/
 .venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# MediaPipe / modelos baixados localmente (regeneram conforme o script)
+*.task
