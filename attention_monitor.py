@@ -44,13 +44,13 @@ from facemesh_conexoes import (
 # =============================================================================
 # Divisão sugerida para apresentação (3 alunos) — ver README.md
 # -----------------------------------------------------------------------------
-# Aluno 1: captura (webcam), modelo .task, BGR→RGB, Face Landmarker, detect_for_video
-# Aluno 2: métricas EAR/MAR/pose, calibração [c], oclusão, timers, níveis e score
-# Aluno 3: malha no rosto, HUD, alarme, janela OpenCV, argumentos (--no-mesh, etc.)
+# Lucas: captura (webcam), modelo .task, BGR→RGB, Face Landmarker, detect_for_video
+# Rafael: métricas EAR/MAR/pose, calibração [c], oclusão, timers, níveis e score
+# Pedro: malha no rosto, HUD, alarme, janela OpenCV, argumentos (--no-mesh, etc.)  (parte mais fácil)
 # =============================================================================
 
 # ---------------------------------------------------------------------------
-# Aluno 2 — Métricas e regras (EAR, MAR, pose da cabeça, oclusão)
+# Rafael — Métricas e regras (EAR, MAR, pose da cabeça, oclusão)
 # ---------------------------------------------------------------------------
 
 RIGHT_EYE_IDX = (33, 160, 158, 133, 153, 144)
@@ -251,7 +251,7 @@ def olhos_nao_confiaveis_oclusao(
 
 
 # ---------------------------------------------------------------------------
-# Aluno 3 — Malha facial (overlay no vídeo); arestas em facemesh_conexoes.py
+# Pedro — Malha facial (overlay no vídeo); arestas em facemesh_conexoes.py
 # ---------------------------------------------------------------------------
 
 
@@ -284,7 +284,7 @@ def _draw_edges(
 
 
 def desenhar_malha_rosto(frame_bgr: np.ndarray, lm: Any, *, mirror: bool = True) -> None:
-    """Aluno 3: desenha olhos, boca, nariz e contorno do rosto sobre o frame."""
+    """Pedro: desenha olhos, boca, nariz e contorno do rosto sobre o frame."""
     h, w = frame_bgr.shape[:2]
     if len(lm) < 468:
         return
@@ -338,7 +338,7 @@ def piscar_medio_do_resultado(result: Any, face_index: int = 0) -> tuple[Optiona
 
 
 # ---------------------------------------------------------------------------
-# Aluno 3 — Alarme sonoro (nível vermelho)
+# Pedro — Alarme sonoro (nível vermelho)
 # ---------------------------------------------------------------------------
 
 
@@ -384,7 +384,7 @@ def play_red_alert_async() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Aluno 1 — MediaPipe Tasks: opções do Face Landmarker e ficheiro .task
+# Lucas — MediaPipe Tasks: opções do Face Landmarker e ficheiro .task
 # (A função executar() mais abaixo fecha o loop: webcam → RGB → deteção.)
 # ---------------------------------------------------------------------------
 
@@ -409,7 +409,7 @@ class Level(Enum):
 
 @dataclass
 class Thresholds:
-    """Aluno 2: limiares ajustáveis (métricas e tempos em segundos)."""
+    """Rafael: limiares ajustáveis (métricas e tempos em segundos)."""
 
     ear_fechado: float = 0.22
     blink_fechado: float = 0.38
@@ -423,7 +423,7 @@ class Thresholds:
 
 
 def garantir_modelo(path: Path) -> None:
-    """Aluno 1: garante que o modelo existe localmente (download na 1.ª execução)."""
+    """Lucas: garante que o modelo existe localmente (download na 1.ª execução)."""
     if path.is_file() and path.stat().st_size > 1_000_000:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -433,7 +433,7 @@ def garantir_modelo(path: Path) -> None:
 
 
 def desenhar_hud(frame: np.ndarray, level: Level, score: float, lines: list[str]) -> None:
-    """Aluno 3: barra de score, texto de métricas e instruções na imagem."""
+    """Pedro: barra de score, texto de métricas e instruções na imagem."""
     h, w = frame.shape[:2]
     if level == Level.ATENTO:
         color = (80, 220, 80)
@@ -484,11 +484,11 @@ def desenhar_hud(frame: np.ndarray, level: Level, score: float, lines: list[str]
 
 
 def executar(args: argparse.Namespace) -> None:
-    # --- Aluno 1: entrada (webcam) + carregar modelo + criar Face Landmarker ---
+    # --- Lucas: entrada (webcam) + carregar modelo + criar Face Landmarker ---
     root = Path(__file__).resolve().parent
     model_path = root / MODEL_FILENAME
     garantir_modelo(model_path)
-    # --- Aluno 2: limiares usados nas regras (EAR, MAR, pose, tempos em segundos) ---
+    # --- Rafael: limiares usados nas regras (EAR, MAR, pose, tempos em segundos) ---
     thresholds = Thresholds()
     cap = cv2.VideoCapture(args.camera)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -529,7 +529,7 @@ def executar(args: argparse.Namespace) -> None:
             dt = max(now - last_ts, 1e-6)
             last_ts = now
 
-            # [Aluno 1] Pré-processamento: BGR (OpenCV) → RGB (MediaPipe)
+            # [Lucas] Pré-processamento: BGR (OpenCV) → RGB (MediaPipe)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w = rgb.shape[:2]
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -537,9 +537,9 @@ def executar(args: argparse.Namespace) -> None:
             if video_ms < 1:
                 video_ms = 1
 
-            # [Aluno 1] deteção em vídeo (timestamp em ms deve aumentar)
+            # [Lucas] deteção em vídeo (timestamp em ms deve aumentar)
             result: FaceLandmarkerResult = landmarker.detect_for_video(mp_image, video_ms)
-            # [Aluno 3] espelho só para ficar mais natural na webcam
+            # [Pedro] espelho só para ficar mais natural na webcam
             display = cv2.flip(frame, 1)
             lines: list[str] = []
             level = Level.ATENTO
@@ -553,7 +553,7 @@ def executar(args: argparse.Namespace) -> None:
                 lm = result.face_landmarks[0]
                 pts = landmarks_para_pixels(lm, w, h)
 
-                # [Aluno 2] Métricas principais: EAR, MAR, pose; calibração [c]; timers; nível/score
+                # [Rafael] Métricas principais: EAR, MAR, pose; calibração [c]; timers; nível/score
                 ear_l = razao_aspecto_olho(pts, LEFT_EYE_IDX)
                 ear_r = razao_aspecto_olho(pts, RIGHT_EYE_IDX)
                 ear_avg = (ear_l + ear_r) / 2.0
@@ -673,7 +673,7 @@ def executar(args: argparse.Namespace) -> None:
                 else:
                     lines.append(f"Baseline pitch/yaw: {baseline_pitch:.1f} / {baseline_yaw:.1f}")
 
-                # [Aluno 3] --debug: números no terminal (~1×/s) para a banca acompanhar
+                # [Pedro] --debug: números no terminal (~1×/s) para a banca acompanhar
                 if args.debug and (now - debug_last_print) >= 1.0:
                     debug_last_print = now
                     print(
@@ -683,7 +683,7 @@ def executar(args: argparse.Namespace) -> None:
                         f"nivel={level.value}"
                     )
 
-            # [Aluno 3] overlay, HUD, alarme e janela
+            # [Pedro] overlay, HUD, alarme e janela
             if result.face_landmarks and not args.no_mesh:
                 desenhar_malha_rosto(display, result.face_landmarks[0], mirror=True)
             score_smooth = ema(score_smooth, raw_score, 0.2)
@@ -710,7 +710,7 @@ def executar(args: argparse.Namespace) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    """Aluno 3: opções de linha de comando (--no-mesh, --no-audio, --debug)."""
+    """Pedro: opções de linha de comando (--no-mesh, --no-audio, --debug)."""
     p = argparse.ArgumentParser(description="Monitor de atencao e fadiga (webcam).")
     p.add_argument("--camera", type=int, default=0, help="Indice da webcam (default 0).")
     p.add_argument(

@@ -1,90 +1,69 @@
-# Grupo TB — Checkpoint 2
+# CP2 — Monitor de Atenção/Fadiga (OpenCV + MediaPipe)
 
-## Visão geral
+Este projeto usa a webcam para estimar **atenção/fadiga** em tempo real. A ideia é simples: detectar o rosto, extrair alguns sinais fáceis de explicar e transformar isso em um **nível** (verde/amarelo/vermelho) e um **score** (0–100).
 
-- **`attention_monitor.py`** — monitor de **atenção / fadiga** em tempo real (webcam): OpenCV + MediaPipe Face Landmarker, métricas (EAR, MAR, pose), níveis **verde / amarelo / vermelho**, score 0–100, calibração com **`c`**, malha opcional e alarme no vermelho.
-- **`facemesh_conexoes.py`** — apenas as **arestas** da malha usadas para desenhar o rosto (para o ficheiro principal não ficar gigante).
-- **`attention_monitor_lab.ipynb`** — notebook passo a passo (imports → modelo → um frame → métricas → overlay). Para demo estável em tempo real, use o `.py` localmente.
+## O que tem aqui
 
-Recomenda-se executar a webcam **no computador** (ficheiro `.py`), não no Colab.
+- **`attention_monitor.py`**: aplicação principal (webcam + detecção + regras + interface).
+- **`facemesh_conexoes.py`**: lista de conexões da malha facial (só para o arquivo principal não ficar enorme).
+- **`attention_monitor_lab.ipynb`**: notebook “de laboratório” para testar as partes aos poucos.
 
----
+## Como funciona (resumo)
 
-## Apresentação em 3 partes (3 alunos)
+- **Entrada**: webcam pelo OpenCV (`VideoCapture`).
+- **Detecção**: MediaPipe **Face Landmarker** (arquivo `face_landmarker.task`).
+- **Métricas**:
+  - **EAR**: abertura dos olhos (ajuda a indicar olho fechado por tempo).
+  - **MAR**: abertura da boca (ajuda a indicar bocejo).
+  - **Pose** (pitch/yaw/roll): direção aproximada da cabeça.
+- **Decisão por tempo**: em vez de “um frame”, a condição precisa durar alguns **segundos** para mudar o nível.
+- **Calibração (`c`)**: salva um baseline de pose olhando para a tela para reduzir erro por posição natural da cabeça.
 
-Cada pessoa cobre um “pedaço” do pipeline: **entrada → raciocínio → saída**. No final, façam **uma demo só** (por exemplo `python attention_monitor.py --debug`).
+## Rodando no Windows (PowerShell)
 
-### Aluno 1 — Captura e MediaPipe (o “olho” do sistema)
+1) Criar ambiente virtual:
 
-- Problema em uma frase: monitorar sinais de atenção/fadiga em vídeo em tempo real.
-- **Webcam**: `VideoCapture`, frame em BGR (OpenCV).
-- **Pré-processamento**: BGR → RGB, `mp.Image`, modo **VIDEO** e **timestamp em ms** sempre a aumentar.
-- **Modelo**: ficheiro `face_landmarker.task` (descarregado na primeira execução se não existir).
-- **Saída do modelo**: landmarks do rosto; opcionalmente blendshapes (ex.: piscar).
+```powershell
+python -m venv venv
+```
 
-**Perguntas típicas para este aluno:** como o vídeo entra? Por que RGB para o MediaPipe? O que é o `.task`?
+2) Ativar:
 
----
+```powershell
+.\venv\Scripts\Activate.ps1
+```
 
-### Aluno 2 — Métricas e regras (o “raciocínio”)
+3) Instalar dependências:
 
-- **EAR** (olho aberto/fechado), **MAR** (boca/bocejo), **pose** da cabeça (pitch/yaw).
-- **Calibração** com tecla **`c`**: guarda uma referência (“baseline”) de pitch/yaw olhando para o ecrã.
-- **Heurística de confiança**: quando os dados dos olhos parecem pouco fiáveis (ex.: oclusão).
-- **Decisão por tempo**: não basta um frame — acumulam-se **segundos** em cada condição para reduzir falsos alarmes.
-- **Níveis**: verde (atento), amarelo (distração), vermelho (fadiga) e **score** numérico.
+```powershell
+pip install -r requirements.txt
+```
 
-**Perguntas típicas para este aluno:** o que é EAR/MAR? Por que calibrar? Por que usar timers em segundos?
+4) Executar:
 
----
+```powershell
+python attention_monitor.py --debug
+```
 
-### Aluno 3 — Interface e demo (o “resultado visível”)
+Teclas:
+- **`c`**: calibra (~1,5s olhando para a tela)
+- **`q`**: sai
 
-- **HUD**: barra de score, texto com métricas e instruções (`c` / `q`).
-- **Malha** sobre o rosto (opcional: `--no-mesh`).
-- **Alarme** no nível vermelho (opcional: `--no-audio`).
-- **`--debug`**: imprime no terminal (~1×/s) métricas e nível — útil para a banca ver números sem só olhar para o vídeo.
-- **Limitações** (breve): iluminação, ângulo, oclusão; ideias de melhoria (log CSV, ajuste fino de limiares).
+Opções úteis:
+- **`--no-mesh`**: não desenha a malha
+- **`--no-audio`**: desliga o alarme
+- **`--debug`**: imprime métricas no terminal (bom para apresentação)
 
-**Perguntas típicas para este aluno:** o que o utilizador vê? Como demonstram que o sistema reage?
+## Roteiro rápido de demo (o que mostrar)
 
----
+- **1)** Rodar com `--debug` e explicar que o terminal mostra as métricas e o nível.
+- **2)** Apertar **`c`** olhando para a tela (calibração).
+- **3)** Olhar para o lado por alguns segundos para cair no **amarelo**.
+- **4)** Simular cansaço (piscar longo / fechar os olhos por mais tempo) para ir ao **vermelho**.
+- **5)** Mostrar que `--no-mesh` e `--no-audio` mudam a interface sem mexer na lógica.
 
-## Instalação e execução
+## Divisão da apresentação (Pedro, Lucas, Rafael)
 
-1. **Criar a virtualenv**
-
-   ```bash
-   python3 -m venv venv
-   ```
-
-2. **Ativar o ambiente**
-
-   - macOS / Linux:
-
-     ```bash
-     source venv/bin/activate
-     ```
-
-   - Windows (PowerShell):
-
-     ```powershell
-     .\venv\Scripts\Activate.ps1
-     ```
-
-3. **Instalar dependências**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Correr o monitor** (na primeira execução descarrega `face_landmarker.task` se necessário)
-
-   ```bash
-   python attention_monitor.py
-   ```
-
-   - **`c`** — calibrar (~1,5 s olhando para o ecrã)  
-   - **`q`** — sair  
-
-   Opções úteis: `--no-mesh`, `--no-audio`, `--debug`.
+- **Lucas (captura + MediaPipe)**: webcam, BGR→RGB, `mp.Image`, modo VIDEO e `detect_for_video`, arquivo `.task`.
+- **Rafael (métricas + regras)**: EAR/MAR/pose, calibração, timers por segundos, níveis e score.
+- **Pedro (interface + demo — parte mais fácil)**: HUD, malha opcional, argumentos `--no-mesh/--no-audio/--debug`, como conduzir a demonstração.
