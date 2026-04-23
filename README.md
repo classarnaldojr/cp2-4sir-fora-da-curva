@@ -66,4 +66,4 @@ Opções úteis:
 
 - **Lucas (captura + MediaPipe)**: webcam, BGR→RGB, `mp.Image`, modo VIDEO e `detect_for_video`, arquivo `.task`.
 - **Rafael (métricas + regras)**: EAR/MAR/pose, calibração, timers por segundos, níveis e score.
-- **Pedro (interface + demo — parte mais fácil)**: HUD, malha opcional, argumentos `--no-mesh/--no-audio/--debug`, como conduzir a demonstração.
+- **Pedro (interface + demo)**: HUD, malha opcional, argumentos `--no-mesh/--no-audio/--debug`, como conduzir a demonstração.

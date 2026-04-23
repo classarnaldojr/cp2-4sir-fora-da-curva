@@ -46,7 +46,7 @@ from facemesh_conexoes import (
 # -----------------------------------------------------------------------------
 # Lucas: captura (webcam), modelo .task, BGR→RGB, Face Landmarker, detect_for_video
 # Rafael: métricas EAR/MAR/pose, calibração [c], oclusão, timers, níveis e score
-# Pedro: malha no rosto, HUD, alarme, janela OpenCV, argumentos (--no-mesh, etc.)  (parte mais fácil)
+# Pedro: malha no rosto, HUD, alarme, janela OpenCV, argumentos (--no-mesh, etc.)
 # =============================================================================
 
 # ---------------------------------------------------------------------------
